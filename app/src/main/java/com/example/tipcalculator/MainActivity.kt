@@ -3,6 +3,7 @@ package com.example.tipcalculator
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
@@ -43,22 +44,26 @@ fun TipCalculatorScreen(){
     var amountInput by remember {
         mutableStateOf("")
     }
+    var tipInput by remember {
+        mutableStateOf("")
+    }
     val amount = amountInput.toDoubleOrNull() ?: 0.0
-    val tip = calculateTip(amount)
+    val tipPercentage = tipInput.toDoubleOrNull() ?: 0.0
+    val tip = calculateTip(amount, tipPercentage)
     Column(Modifier.padding(32.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = stringResource(id = R.string.app_name), fontSize = 24.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
         Spacer(modifier = Modifier.height(16.dp))
-        EditNumberField(value = amountInput, onValueChange = {amountInput = it})
+        EditNumberField(value = amountInput, onValueChange = {amountInput = it}, textLabel = R.string.cost_of_service)
+        EditNumberField(textLabel = R.string.tip_percentage, value = tipInput, onValueChange = {tipInput = it})
         Text(text = stringResource(id = R.string.tip_amount, tip), fontSize = 20.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-fun EditNumberField(value: String, onValueChange: (String) -> Unit){
-
+fun EditNumberField(@StringRes textLabel: Int, value: String, onValueChange: (String) -> Unit, modifier: Modifier= Modifier){
     TextField(
         value = value,
-        label = { Text(text = stringResource(id = R.string.cost_of_service), modifier = Modifier.fillMaxWidth())},
+        label = { Text(text = stringResource(id = textLabel), modifier = Modifier.fillMaxWidth())},
         onValueChange = onValueChange,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         singleLine = true)
