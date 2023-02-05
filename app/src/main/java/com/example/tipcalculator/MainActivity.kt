@@ -7,14 +7,12 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,9 +49,12 @@ fun TipCalculatorScreen(){
     var tipInput by remember {
         mutableStateOf("")
     }
+    var roundUp by remember {
+        mutableStateOf(false)
+    }
     val amount = amountInput.toDoubleOrNull() ?: 0.0
     val tipPercentage = tipInput.toDoubleOrNull() ?: 0.0
-    val tip = calculateTip(amount, tipPercentage)
+    val tip = calculateTip(amount, tipPercentage, roundUp)
     val focusManager = LocalFocusManager.current
     Column(Modifier.padding(32.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = stringResource(id = R.string.app_name), fontSize = 24.sp,
@@ -66,9 +67,14 @@ fun TipCalculatorScreen(){
             keyboardActions = KeyboardActions(onNext = {focusManager.moveFocus(
             FocusDirection.Down)}))
         EditNumberField(textLabel = R.string.tip_percentage, value = tipInput,
-            onValueChange = {tipInput = it}, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number,
+            onValueChange = {tipInput = it},
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = {focusManager.clearFocus()}))
+            keyboardActions = KeyboardActions(onDone = {focusManager.clearFocus()})
+        )
+        RoundTheTipRow(roundUp = roundUp, onCheckedChange = {
+            roundUp = it
+        })
         Text(text = stringResource(id = R.string.tip_amount, tip), fontSize = 20.sp,
             fontWeight = FontWeight.Bold)
     }
@@ -76,7 +82,8 @@ fun TipCalculatorScreen(){
 
 @Composable
 fun EditNumberField(@StringRes textLabel: Int, value: String, onValueChange: (String) -> Unit,
-                    modifier: Modifier= Modifier, keyboardOptions: KeyboardOptions, keyboardActions: KeyboardActions){
+                    modifier: Modifier= Modifier, keyboardOptions: KeyboardOptions,
+                    keyboardActions: KeyboardActions){
     TextField(
         value = value,
         label = { Text(text = stringResource(id = textLabel), modifier = modifier.fillMaxWidth())},
@@ -87,8 +94,30 @@ fun EditNumberField(@StringRes textLabel: Int, value: String, onValueChange: (St
     Spacer(modifier = Modifier.height(24.dp))
 }
 
-private fun calculateTip(amount: Double, tipPercentage: Double = 15.0): String{
-    val tip = (tipPercentage/100) * amount
+@Composable
+fun RoundTheTipRow(modifier: Modifier = Modifier, roundUp: Boolean,
+                   onCheckedChange: (Boolean) -> Unit){
+    Row(modifier = modifier
+        .fillMaxWidth()
+        .size(48.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        Text(text = stringResource(id = R.string.round_tip))
+        Switch(checked = roundUp, onCheckedChange = onCheckedChange,
+            colors =SwitchDefaults.colors(
+                uncheckedThumbColor = Color.White
+            ),
+            modifier = modifier
+                .fillMaxWidth()
+                .wrapContentWidth(Alignment.End)
+        )
+    }
+}
+
+private fun calculateTip(amount: Double, tipPercentage: Double = 15.0, roundUp: Boolean): String{
+    var tip = (tipPercentage/100) * amount
+    if (roundUp){
+        tip = kotlin.math.ceil(tip)
+    }
     return NumberFormat.getCurrencyInstance().format(tip)
 }
 
